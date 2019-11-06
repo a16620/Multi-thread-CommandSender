@@ -72,7 +72,10 @@ void TcpCommunicator::Shutdown(int how)
 
 void TcpCommunicator::Close()
 {
+	if (m_socket == INVALID_SOCKET)
+		return;
 	closesocket(m_socket);
+	m_socket = INVALID_SOCKET;
 }
 
 TcpListener::TcpListener(SOCKET socket) : m_socket(socket)

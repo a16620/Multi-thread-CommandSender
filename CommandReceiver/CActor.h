@@ -56,6 +56,7 @@ public:
 class CServerListener : public CActor
 {
 private:
+	const char* m_password;
 	CActor* next;
 	TcpListener listener;
 

@@ -1,5 +1,6 @@
 #pragma once
 #include <stdexcept>
+#include <memory>
 
 template<typename T>
 void Swap(T& a, T& b)
@@ -53,15 +54,16 @@ public:
 		buffer = nullptr;
 	}
 
-	Buffer(int size)
+	explicit Buffer(int size)
 	{
 		reserve(size);
 	}
 
-	Buffer(const Buffer& _R)
+	explicit Buffer(const Buffer& _R)
 	{
 		length = _R.length;
-		buffer = _R.buffer;
+		buffer = new dtype[length];
+		memcpy(buffer, _R.buffer, length);
 	}
 
 	~Buffer()

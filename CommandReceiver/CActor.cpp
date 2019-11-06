@@ -126,6 +126,8 @@ CServerActor::~CServerActor()
 }
 #pragma endregion
 #pragma region ServerListener
+#define LOGIN_NONPASS 96
+#define LOGIN_REQPASS 97
 void CServerListener::run()
 {
 	while (m_keepRun)
@@ -134,13 +136,25 @@ void CServerListener::run()
 		if (s == INVALID_SOCKET)
 			continue;
 		TcpCommunicator* con = new TcpCommunicator(s);
+
+		Buffer<char> bf;
 		char name[20];
 		gethostname(name, 20);
-		int l = strlen(name) + 1;
-		Buffer<char> bf(l);
-		memcpy(bf.getBuffer(), name, l);
+		int namelen = strlen(name)+1;
+		bf.reserve(namelen+1);
+		bf.getBuffer()[0] = LOGIN_REQPASS;
+		memcpy(bf.getBuffer()+1, name, namelen);
 		con->Send(&bf);
 		bf.release();
+
+		auto_ptr<Buffer<char>> pwbf(con->Receive());
+
+		if (strcmp(m_password, pwbf->getBuffer()) != 0)
+		{
+			delete con;
+			continue;
+		}
+
 		next->push_message(con);
 	}
 }
@@ -156,6 +170,8 @@ void CServerListener::onTerminate()
 
 CServerListener::CServerListener(CActor* n, int port) : next(n), listener(TcpListener(socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)))
 {
+	m_password = "HARICOM1";
+
 	listener.SetAddress(INADDR_ANY, port);
 	listener.Bind();
 	listener.Listen(5);
